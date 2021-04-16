@@ -1,0 +1,14 @@
+#The format is
+#
+#orbital_label1 orbital_label2 orbital_label3 orbital_label4 interaction_strength
+#
+#Say, we have an orbital where label 0 is spin up and label 1 is spin down, effectively a two-orbital problem
+#interaction is H_{int}=U*f^{dagger}_{0}*f_{0}*f^{dagger}_{1}*f_{1}, where we choose U=1.0, then this file should look like
+#
+#0 0 1 1 0.5
+#1 1 0 0 0.5
+#
+#Where interaction strength is U/2 to not double-count
+#
+0 0 1 1 1.5
+1 1 0 0 1.5
