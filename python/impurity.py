@@ -1,3 +1,7 @@
+#RISB impurity Solver by Pak Ki Henry Tsang, Apr 2021. email: henrytsang222@gmail.com / tsang@magnet.fsu.edu
+#
+#
+
 from python.matrix import *
 from python.diagonalization import *
 import numpy as np
@@ -5,6 +9,7 @@ from scipy import optimize
 from numpy.linalg import inv
 
 class RISB_impurity:
+
     #############
     # Paramters #
     #############
@@ -13,6 +18,7 @@ class RISB_impurity:
     eta=1e-3 #Broadening
     
     norb=None #Number of orbitals
+    snorb=None #Number of orbitals (paramagnetic)
     nom=None #Number of frequency points
     num_eig=6
     verbose=False
@@ -52,6 +58,9 @@ class RISB_impurity:
     
     H_list=None
     tH_list=None
+    
+    sH_list=None #paramagnetic
+    stH_list=None #paramagnetic
     
     ########################################
     # Embedded Hamiltonian sparse matrices #
@@ -98,19 +107,23 @@ class RISB_impurity:
         
         #some constants/constant matrix
         self.norb=norb
+        self.snorb=int(norb/2)
         self.grid_size=len(self.omega_grid)
         self.identity_matrix=np.eye(self.norb)
+        self.sidentity_matrix=np.eye(self.snorb)
         
         #matrix version of omega grid
         self.omega_matrix_grid=(self.omega_grid[:,np.newaxis]*self.identity_matrix.reshape(self.norb**2)).reshape(self.grid_size,self.norb,self.norb)
+        self.somega_matrix_grid=(self.omega_grid[:,np.newaxis]*self.sidentity_matrix.reshape(self.snorb**2)).reshape(self.grid_size,self.snorb,self.snorb)
         
         #calculate fermi function
         self.fermi_grid=self.fermi(self.omega_grid.real,self.T)
         self.fermi_matrix_grid=(self.fermi_grid[:,np.newaxis]*np.ones(self.norb**2)).reshape(self.grid_size,self.norb,self.norb)
+        self.sfermi_matrix_grid=(self.fermi_grid[:,np.newaxis]*np.ones(self.snorb**2)).reshape(self.grid_size,self.snorb,self.snorb)
         
         #Hermitian matrix basis
         self.H_list,self.tH_list=Hermitian_list(self.norb)
-        self.Hsym_list,self.tHsym_list=Hermitian_list(int(self.norb/2))
+        self.sH_list,self.stH_list=Hermitian_list(self.snorb)
         
         #####################################################
         # Construct the creation and annihilation operators #
@@ -171,7 +184,6 @@ class RISB_impurity:
         
         #calculate the left bracket as a matrix function of ( x(1-x) )^(-0.5)
         left=funcmat(Delta_p,self.denR)
-        #print(left)
         
         #calculate the right bracket : prepare the integrand
         right_integrand=-(Delta_grid@G_grid@inv(R)).imag*self.fermi_matrix_grid/np.pi
@@ -205,7 +217,7 @@ class RISB_impurity:
 
         return l_c
 
-    def iterate(self,Delta_grid,R,l,num_eig=2,sparse=False):
+    def iterate(self,Delta_grid,R,l,num_eig=2,paramagnetic=True,sparse=False):
         
         self.vprint("R=\n",R)
         self.vprint("l=\n",l)
@@ -246,10 +258,14 @@ class RISB_impurity:
         #Compute F1, the matrix corresponding to the first root problem
         #Recall density matrix is in following block structure: [ [c^dagger c, c^daggeer f], [f^dagger c, f^dagger f] ]
         #get_blocks(denMat,no)[2] gets the off-diagonal block c^dagger f (0,1 would be the diagonal elements)
-
-        F1 = ( get_blocks(denMat,norb)[2] - np.dot(R.T, funcmat(self.Delta_p, self.denRm1) ) )#[::2,::2]
+        F1 = ( get_blocks(denMat,norb)[2] - np.dot(R.T, funcmat(self.Delta_p, self.denRm1) ) )
+        
         #Compute F2, the matrix corresponding to the second root problem
-        F2 = ( ffdagger.T - self.Delta_p )#[::2,::2] # Equation 6 (F2)   
+        F2 = ( ffdagger.T - self.Delta_p ) # Equation 6 (F2)   
+        
+        if paramagnetic:
+            F1=F1[::2,::2]
+            F2=F2[::2,::2]
 
         #F2 is hermitian
         Fdim = len(np.real(F2))
@@ -279,24 +295,23 @@ class RISB_impurity:
 
         return roots
     
-    def root_problem(self,x,Delta_grid,num_eig=2,sparse=False):
+    def root_problem(self,x,Delta_grid,num_eig=2,paramagnetic=True,sparse=False):
         
-        r_decomposed = x[:2*int((self.norb)**2)]
-        l_decomposed = x[2*int((self.norb)**2):]
+        r_decomposed = x[:2*int((self.snorb)**2)] if paramagnetic else x[:2*int((self.norb)**2)]
+        l_decomposed = x[2*int((self.snorb)**2):] if paramagnetic else x[2*int((self.norb)**2):]
     
         # build R and Lambda
-        R = complexHcombination(r_decomposed,self.H_list)
-        l = realHcombination(l_decomposed,self.H_list)
+        R = np.kron(complexHcombination(r_decomposed,self.sH_list),np.eye(2)) if paramagnetic else complexHcombination(r_decomposed,self.H_list)
+        l = np.kron(realHcombination(l_decomposed,self.sH_list),np.eye(2)) if paramagnetic else realHcombination(l_decomposed,self.H_list)
         
-        
-        
-        return self.iterate(Delta_grid,R,l,num_eig=num_eig,sparse=sparse)
+        return self.iterate(Delta_grid,R,l,num_eig=num_eig,paramagnetic=paramagnetic,sparse=sparse)
     
-    def solve(self,Delta_grid,R0,l0,xtol=1e-8,eps=1e-12,factor=1,num_eig=2,sparse=False):
+    def solve(self,Delta_grid,R0,l0,xtol=1e-8,eps=1e-12,factor=1,num_eig=2,paramagnetic=True,sparse=False):
+        
         
         #Decompose initial guess
-        l0_decomposed = inverse_realHcombination(l0,self.H_list) #lambda is hermitian, in general
-        r0_decomposed = inverse_complexHcombination(R0,self.H_list) #R is not necessarily hermitian
+        l0_decomposed = inverse_realHcombination(l0[::2,::2],self.sH_list) if paramagnetic else inverse_realHcombination(l0,self.H_list)  #lambda is hermitian, in general
+        r0_decomposed = inverse_complexHcombination(R0[::2,::2],self.sH_list) if paramagnetic else inverse_complexHcombination(R0,self.H_list) #R is not necessarily hermitian
         
         x0 = np.hstack( ( r0_decomposed.real, l0_decomposed.real) )
 
@@ -306,7 +321,7 @@ class RISB_impurity:
                     'factor': factor #initial factor of the step size (use small to avoid overshooting in the first).
                     }
 
-        rs = optimize.root(self.root_problem,x0,args=(Delta_grid,num_eig,sparse),method='hybr',options=options)
+        rs = optimize.root(self.root_problem,x0,args=(Delta_grid,num_eig,paramagnetic,sparse),method='hybr',options=options)
 
         print( "RISB root convergence message---------------------------------")
         print( "sucess=",rs.success)
@@ -319,13 +334,13 @@ class RISB_impurity:
         l_decomposed = rs.x[len(r0_decomposed):]
 
         #map r an l to R and Lambda matrix
-        R = complexHcombination(r_decomposed,self.H_list)
-        l = realHcombination(l_decomposed,self.H_list)
+        R = np.kron(complexHcombination(r_decomposed,self.sH_list),np.eye(2)) if paramagnetic else complexHcombination(r_decomposed,self.H_list)
+        l = np.kron(realHcombination(l_decomposed,self.sH_list),np.eye(2)) if paramagnetic else realHcombination(l_decomposed,self.H_list)
         
         output=np.vstack((self.omega_grid,self.G_grid.reshape(self.grid_size,self.norb**2).T)).T
         np.savetxt(self.G_FN,output)
-        np.savetxt(self.R_FN,R.reshape(1, self.norb**2))
-        np.savetxt(self.lambda_FN,l.reshape(1, self.norb**2))
+        np.savetxt(self.R_FN,R)
+        np.savetxt(self.lambda_FN,l)
         
         return self.G_grid,R,l
     

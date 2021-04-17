@@ -1,13 +1,11 @@
-"""
-Matrix-related routines (Python 3)
-
-1. Decomposition/Composition of matrices as linear combination of Hermitian matrices
-2. Function of matrix
-3. Loewner matrix derivative
-
-by Pak Ki Henry Tsang, Apr 2021
-email: henrytsang222@gmail.com / tsang@magnet.fsu.edu
-"""
+#Matrix-related routines (Python 3)
+#
+#1. Decomposition/Composition of matrices as linear combination of Hermitian matrices
+#2. Function of matrix
+#3. Loewner matrix derivative
+#
+#by Pak Ki Henry Tsang, Apr 2021
+#email: henrytsang222@gmail.com / tsang@magnet.fsu.edu
 
 import numpy as np
 

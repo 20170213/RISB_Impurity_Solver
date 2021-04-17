@@ -1,3 +1,5 @@
+#RISB impurity Solver by Pak Ki Henry Tsang, Apr 2021. email: henrytsang222@gmail.com / tsang@magnet.fsu.edu
+
 import numpy as np
 from scipy.special import comb
 from scipy.sparse import csr_matrix

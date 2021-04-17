@@ -24,12 +24,18 @@ parser.add_argument("--lout", help="lambda output file",default='lambda.out')
 parser.add_argument("--Delta", help="Hybridization Function file (input)",default="Delta.inp")
 parser.add_argument("--Rinp", help="R output file",default='R.inp')
 parser.add_argument("--linp", help="lambda output file",default='lambda.inp')
+parser.add_argument("--half", help="halves the embedded Hamiltonian Hilbert space (warning: depreciated)",action='store_true')
+parser.add_argument("--paramagnetic", help="seek paramagnetic solution",default=False,action='store_true')
+parser.add_argument("--sparse", help="use sparse eigenvalue solver (faster)",action='store_true')
 parser.add_argument("--verbose", help="verbose output",action='store_true')
 args = parser.parse_args()
 
 norb=args.norb
 num_eig=args.neig
+half=args.half
+sparse=args.sparse
 verbose=args.verbose
+paramagnetic=args.paramagnetic
   
 T=args.T
 eta=args.eta
@@ -120,6 +126,7 @@ for line in open(Ri_FN):
         R0[idx]=complex(ls[idx])
 R0.resize(norb,norb)
 
+#Read in lambda
 l0=np.zeros(norb**2,dtype=complex)
 for line in open(lambdai_FN):
     if line.startswith('#'):
@@ -136,6 +143,6 @@ l0.resize(norb,norb)
 #########################
 
 
-RISB_solver=RISB_impurity(omega_grid,ob_tensor,tb_tensor,norb,T=T,eta=eta,G_FN=G_FN,R_FN=R_FN,lambda_FN=lambda_FN,verbose=verbose)
+RISB_solver=RISB_impurity(omega_grid,ob_tensor,tb_tensor,norb,T=T,eta=eta,G_FN=G_FN,R_FN=R_FN,lambda_FN=lambda_FN,half=half,verbose=verbose)
 
-RISB_solver.solve(Delta_grid,R0,l0,xtol=xtol,eps=eps,factor=1,sparse=True)
+RISB_solver.solve(Delta_grid,R0,l0,xtol=xtol,eps=eps,factor=1,paramagnetic=paramagnetic,sparse=sparse)

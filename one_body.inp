@@ -2,12 +2,12 @@
 #
 #orbital_label1 orbital_label2 energy
 #
-#Say, for one-orbital impurity of site energy 0, and mu=1.0, then this file should look like
+#Say, for one-orbital impurity of site energy 0, then this file should look like
 #
-#0 0 -1.0
-#1 1 -1.0
+#0 0 0.0
+#1 1 0.0
 #
-#the value -1.0=epsilon-mu. We need labels 0 and 1 because of two spins acting like two orbitals instead of one
+#We need labels 0 and 1 because of two spins acting like two orbitals instead of one
 #
-0 0 -1.5
-1 1 -1.5
+0 0 0.0
+1 1 0.0
