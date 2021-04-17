@@ -94,7 +94,7 @@ class RISB_impurity:
     def ddenRm1(self,x):
         return ((0.5+0.j)-x)*np.power(x*((1.0+0.j)-x),-0.5)
     
-    def __init__(self,omega_grid,ob_tensor,tb_tensor,norb,T=1e-3,eta=1e-3,G_FN='G.out',R_FN='R.out',lambda_FN='lambda.out',verbose=False):
+    def __init__(self,omega_grid,ob_tensor,tb_tensor,norb,T=1e-3,eta=1e-3,G_FN='G.out',R_FN='R.out',lambda_FN='lambda.out',half=False,verbose=False):
         
         #assignments
         self.omega_grid=omega_grid
@@ -138,8 +138,8 @@ class RISB_impurity:
         V2E=self.tb_tensor#two_body_tensor(no,1.0,UT)
         nzV2E = np.nonzero(V2E) #find the non zero entries of two-body tensor
         TBT=(np.transpose(nzV2E),V2E[nzV2E]) #([ijkl,...],[val,...]) of non zero entries two-body tensor
-        self.LOBP,self.HYBP,self.HYBPC,self.BTHP,self.LTBP,self.SPPN = build_Hemb_basis(self.norb,self.FH_list,TBT,half=True,spin=False)
-        self.DMTB=build_density_matrix_operator(self.FH_list,half=True,spin=False)
+        self.LOBP,self.HYBP,self.HYBPC,self.BTHP,self.LTBP,self.SPPN = build_Hemb_basis(self.norb,self.FH_list,TBT,half=half,spin=False)
+        self.DMTB=build_density_matrix_operator(self.FH_list,half=half,spin=False)
 
         return None
     
