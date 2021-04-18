@@ -8,7 +8,6 @@
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--U", help="Hubbard U", required=True, type=float)
 parser.add_argument("--mu", help="chemical potential", required=True, type=float)
 parser.add_argument("--norb", help="number of orbitals", required=True, type=int)
 parser.add_argument("--eta", help="broadening", default=5e-3, type=float)
@@ -40,7 +39,6 @@ paramagnetic=args.paramagnetic
 T=args.T
 eta=args.eta
 mu=args.mu
-U=args.U
 
 Delta_FN=args.Delta
 one_body_FN=args.obody
