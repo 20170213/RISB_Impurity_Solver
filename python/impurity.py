@@ -1,6 +1,10 @@
 #RISB impurity Solver by Pak Ki Henry Tsang, Apr 2021. email: henrytsang222@gmail.com / tsang@magnet.fsu.edu
 #
+#References: [1] Appendix D of https://doi.org/10.1103/PhysRevX.5.011008  (Phase Diagram and Electronic Structure of Praseodymium and Plutonium)
+#            [2] Supplmentary Material of https://doi.org/10.1103/PhysRevLett.118.126401 (Slave Boson Theory of Orbital Differentiation with Crystal Field Effects: Application to UO2)
 #
+#The function RISB_impurity.iterate outlines how the solver works
+
 
 from python.matrix import *
 from python.diagonalization import *
@@ -224,20 +228,20 @@ class RISB_impurity:
         
         self.G_grid=self.get_G_grid(Delta_grid,R,l)
         
-        self.Delta_p=self.get_Delta_p(self.G_grid,R,l)
+        self.Delta_p=self.get_Delta_p(self.G_grid,R,l) # Computes eq. D2 and D3 in reference [1], using the rotationally invariant formalism in reference [2]
         
         self.vprint("Delta_p=\n",self.Delta_p)
         
-        self.D=self.get_D(Delta_grid,self.G_grid,self.Delta_p,R,l)
+        self.D=self.get_D(Delta_grid,self.G_grid,self.Delta_p,R,l) #Computes eq. D4 in reference [1], using the rotationally invariant formalism in reference [2]
         
         self.vprint("D=\n",self.D)
         
-        self.lambda_c=self.get_Lambda_c(self.Delta_p,self.D,R,l)
+        self.lambda_c=self.get_Lambda_c(self.Delta_p,self.D,R,l) #Computes eq. D5 in reference [1], using the rotationally invariant formalism in reference [2]
         
         self.vprint("lambda_c=\n",self.lambda_c)
         
         # Solve embedding problem
-        self.gvec = solve_Hemb(self.D,self.lambda_c, self.ob_tensor, self.tb_tensor, self.LOBP,self.HYBP,self.HYBPC,self.BTHP,self.LTBP,self.SPPN, num_eig=num_eig,sparse=sparse)
+        self.gvec = solve_Hemb(self.D,self.lambda_c, self.ob_tensor, self.tb_tensor, self.LOBP,self.HYBP,self.HYBPC,self.BTHP,self.LTBP,self.SPPN, num_eig=num_eig,sparse=sparse) #Find the ground state of Hamiltonian eq. D9 in reference [1]
         
         #calculate density matrix (note it includes the "duplicated" space)
         norb=self.norb
@@ -258,10 +262,10 @@ class RISB_impurity:
         #Compute F1, the matrix corresponding to the first root problem
         #Recall density matrix is in following block structure: [ [c^dagger c, c^daggeer f], [f^dagger c, f^dagger f] ]
         #get_blocks(denMat,no)[2] gets the off-diagonal block c^dagger f (0,1 would be the diagonal elements)
-        F1 = ( get_blocks(denMat,norb)[2] - np.dot(R.T, funcmat(self.Delta_p, self.denRm1) ) )
+        F1 = ( get_blocks(denMat,norb)[2] - np.dot(R.T, funcmat(self.Delta_p, self.denRm1) ) ) #Computes eq. D7 in reference [1], using the rotationally invariant formalism in reference [2]
         
         #Compute F2, the matrix corresponding to the second root problem
-        F2 = ( ffdagger.T - self.Delta_p ) # Equation 6 (F2)   
+        F2 = ( ffdagger.T - self.Delta_p ) #Computes eq. D8 in reference [1], using the rotationally invariant formalism in reference [2]  
         
         if paramagnetic:
             F1=F1[::2,::2]

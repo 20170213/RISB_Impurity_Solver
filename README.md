@@ -7,6 +7,8 @@ This is an numerical solver for the Anderson Impurity Model using the Rotational
 
 One should first prepare files, default to be 'one_body.inp', 'two_body.inp', 'R.inp', 'lambda.inp', 'Delta.inp' for the solver, otherwise it would not work properly. The instructions to format these files can be found in this document.
 
+Note that the impurity formalism can be found in reference [1] at Appendix D. It can be "enhanced" into the RISB-impurity formalism using Section V.B of the supplementary material of reference [2].
+
 usage: solver.py [-h] --mu MU --norb NORB [--eta ETA] [--T T] [--xtol XTOL]
                  [--eps EPS] [--neig NEIG] [--obody OBODY] [--tbody TBODY]
                  [--Gout GOUT] [--Rout ROUT] [--lout LOUT] [--Delta DELTA]
