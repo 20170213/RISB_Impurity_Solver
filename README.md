@@ -45,7 +45,7 @@ Some additional notes:
 - T or temperature will affect the smearing of the fermi-function. A larger value helps convergence, but one should refrain from increasing this too much to avoid superficial behaviors as RISB (so-far) is a 0-temperature formalism.
 - the default file for Hybridization function is Delta.inp
 - the default file for initial Guess of R,lambda are respectively R.inp and lambda.inp
-- the option --half will decrease the size of the Hilbert space of the Hamiltonian to diagonalize, which speeds up calculation in the paramagnetic case without causing problems in the single-band case. But it is not clear if this would break calculations in other cases, so the best is to leave this option alone (which is default to be turned off).
+- the option --half will decrease the size of the Hilbert space of the Hamiltonian to diagonalize, which speeds up calculation in the single-band paramagnetic case without causing problems. But it is not clear if this would break calculations in other cases, so the best is to leave this option alone (which is default to be turned off).
 - the option --paramagnetic will force the solver to seek paramagnetic solutions, one should always use this option if looking for paramagnetic solutions.
 - the option --sparse will force the solver to use sparse eigenvalue routines, which will speed up calculations greatly especially if there are many orbitals
 
